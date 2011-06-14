@@ -2,26 +2,7 @@
 #import <Foundation/Foundation.h>
 #import "fstree.h"
 
-/* Goal
-   Changes:
-   <action> <filename>
-   Example:
-   M foo.c
-   A bar.c
-   D baz.c
-*/
-
-/*
- kFSEventStreamEventFlagNone = 0x00000000,
- kFSEventStreamEventFlagMustScanSubDirs = 0x00000001,
- kFSEventStreamEventFlagUserDropped = 0x00000002,
- kFSEventStreamEventFlagKernelDropped = 0x00000004,
- kFSEventStreamEventFlagEventIdsWrapped = 0x00000008,
- kFSEventStreamEventFlagHistoryDone = 0x00000010,
- kFSEventStreamEventFlagRootChanged = 0x00000020,
- kFSEventStreamEventFlagMount = 0x00000040,
- kFSEventStreamEventFlagUnmount = 0x00000080
-*/
+#include <getopt.h>
 
 void iFSEventStreamCallback(
     ConstFSEventStreamRef streamRef,
@@ -39,16 +20,7 @@ void iFSEventStreamCallback(
     }
 }
 
-int main(int argc, const char **argv) {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    NSMutableArray *paths = [[[[NSProcessInfo processInfo] arguments] mutableCopyWithZone: nil] autorelease];
-
-    [paths removeObjectAtIndex:0];
-
-    if (![paths count]) {
-        [paths addObject:@"."];
-    }
-
+int run(NSArray *paths) {
     FSTree *tree = [[[FSTree alloc] initWithPaths:paths] autorelease];
     FSEventStreamContext context = {
         0,
@@ -81,7 +53,54 @@ int main(int argc, const char **argv) {
     FSEventStreamStop(ref);
     FSEventStreamInvalidate(ref);
     FSEventStreamRelease(ref);
+    return EXIT_SUCCESS;
+}
+
+int main(int argc, char *const *argv) {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+    NSMutableArray *execs = [NSMutableArray array];
+    static struct option longOpts[] = {
+        { "exec", required_argument, NULL, 'e' },
+        { NULL, 0, NULL, 0 }
+    };
+
+    const char *optString = "e:h?";
+    int longIndex;
+    int res;
+    int status = -1;
+    do {
+        res = getopt_long_only(argc, argv, optString, longOpts, &longIndex);
+        switch(res) {
+        case 'e':
+            if (status == -1) status = 1;
+            [execs addObject:[NSString stringWithUTF8String:optarg]];
+            break;
+        case 'h':
+        case '?':
+            status = 0;
+            break;
+        case 0: // long arg
+        case -1:
+        default:
+            break;
+        }
+    } while(res != -1);
+
+    // Paths to scan
+    NSMutableArray *paths = [NSMutableArray array];
+    char *const *rav = argv + optind;
+    int rac = argc-optind;
+    for (int i = 0; i<rac; ++i) {
+        [paths addObject: [NSString stringWithUTF8String:rav[i]]];
+    }
+
+    if (![paths count]) {
+        [paths addObject:@"."];
+    }
+
+    int ret = status? run(paths) : 1;
 
     [pool drain];
-    return EXIT_SUCCESS;
+    return ret;
 }
