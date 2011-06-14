@@ -41,7 +41,7 @@ void iFSEventStreamCallback(
 
 int main(int argc, const char **argv) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	NSMutableArray *paths = [[[[NSProcessInfo processInfo] arguments] mutableCopyWithZone: nil] autorelease];
+    NSMutableArray *paths = [[[[NSProcessInfo processInfo] arguments] mutableCopyWithZone: nil] autorelease];
 
     [paths removeObjectAtIndex:0];
 
@@ -83,5 +83,5 @@ int main(int argc, const char **argv) {
     FSEventStreamRelease(ref);
 
     [pool drain];
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
