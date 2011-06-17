@@ -20,20 +20,12 @@ typedef enum
 @property (retain) NSMutableArray *modScripts;
 @property (retain) NSMutableArray *delScripts;
 
-- (void) addExecutable:(NSString *)executable flags:(NSUInteger)flags;
+- (int) addExecutable:(NSString *)executable flags:(NSUInteger)flags;
 
 @end
 
 @implementation ExecutionContext
 @synthesize tree, addScripts, delScripts, modScripts;
-
-+(void) launch:(NSString *)cmd args:(NSArray *)args
-{
-    NSTask *task = [[[NSTask alloc] init] autorelease];
-    [task setLaunchPath: cmd];
-    [task setArguments: args];
-    [task launch];
-}
 
 - (id) init
 {
@@ -69,9 +61,13 @@ typedef enum
 
 - (void) execute:(NSString *)path executables:(NSArray*)executables
 {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
     for (NSString *executable in executables)
     {
-        [ExecutionContext launch:executable args:[NSArray arrayWithObject:path]];
+        if ([fileManager isExecutableFileAtPath:executable])
+        {
+            [NSTask launchedTaskWithLaunchPath:executable arguments:[NSArray arrayWithObject:path]];
+        }
     }
 }
 
@@ -93,12 +89,19 @@ typedef enum
     [self execute:path executables:delScripts];
 }
 
-- (void) addExecutable:(NSString *)executable flags:(NSUInteger)flags
+- (int) addExecutable:(NSString *)executable flags:(NSUInteger)flags
 {
+    if (![[NSFileManager defaultManager] isExecutableFileAtPath:executable])
+    {
+        return 0;
+    }
+
     if (flags & ADD_FLAG) [addScripts addObject:executable];
     if (flags & MODIFY_FLAG) [modScripts addObject:executable];
     if (flags & DELETE_FLAG) [delScripts addObject:executable];
+    return 1;
 }
+
 @end
 
 void iFSEventStreamCallback(
@@ -170,9 +173,10 @@ int main(int argc, char *const *argv)
     };
 
     const char *optString = "adme:h?";
-    int longIndex;
+    BOOL good = YES;
+
     int res;
-    int status = 1;
+    int longIndex;
     do
     {
         res = getopt_long_only(argc, argv, optString, longOpts, &longIndex);
@@ -189,12 +193,16 @@ int main(int argc, char *const *argv)
             break;
         case 'e':
             if (!flags) flags = ADD_FLAG | MODIFY_FLAG | DELETE_FLAG;
-            [ec addExecutable:[NSString stringWithUTF8String:optarg] flags:flags];
+            if (![ec addExecutable:[NSString stringWithUTF8String:optarg] flags:flags])
+            {
+                fprintf(stderr, "Error, executable %s not found.\n", optarg);
+                good = NO;
+            }
             flags = 0;
             break;
         case 'h':
         case '?':
-            status = 0;
+            good = NO;
             break;
         case 0: // long arg
         case -1:
@@ -206,16 +214,18 @@ int main(int argc, char *const *argv)
     // Paths to scan
     char *const *rav = argv + optind;
     int rac = argc-optind;
+
     if (rac == 0)
     {
         [ec addPath:@"."];
     }
+
     for (int i = 0; i<rac; ++i)
     {
         [ec addPath:[NSString stringWithUTF8String:rav[i]]];
     }
 
-    int ret = status? run(ec) : 1;
+    int ret = good? run(ec) : 1;
 
     [pool drain];
     return ret;
