@@ -41,6 +41,7 @@
 
 @implementation FSTree
 @synthesize pathTree, fileManager, changesListener;
+
 - (NSString *) parsePath:(NSString *)path
 {
     if (!path || [path length] == 0) return nil;
@@ -74,29 +75,35 @@
         else
         {
             // Just add and monitor.
-            File *file = [[[File alloc] initWithPath:fileName] autorelease];
-            [files setObject:file forKey:fileName];
+            File *file = [[[File alloc] initWithPath:absoluteFilename] autorelease];
+            [files setObject:file forKey:absoluteFilename];
         }
     }
     [pathTree setObject:files forKey:path];
 }
 
 
-- (id) initWithPathsAndListener:(NSArray*)paths listener:(id<FileSystemChangesListener>)listener
+- (id) initWithListener:(id<FileSystemChangesListener>)listener
 {
     self = [super init];
     if (self)
     {
         self.changesListener = listener;
         self.fileManager = [NSFileManager defaultManager];
-        self.pathTree = [NSMutableDictionary dictionaryWithCapacity:[paths count]];
-        for (NSString *path in paths)
-        {
-            NSString *absolutePath = [self parsePath: path];
-            [self scanPath: absolutePath recursive:YES];
-        }
+        self.pathTree = [NSMutableDictionary dictionary];
     }
     return self;
+}
+
+- (void) addPath:(NSString*)path
+{
+    NSString *absolutePath = [self parsePath: path];
+    [self scanPath: absolutePath recursive:YES];
+}
+
+- (NSArray *) paths
+{
+    return [self.pathTree allKeys];
 }
 
 - (void) updatePath:(NSString *)inPath

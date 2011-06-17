@@ -10,7 +10,10 @@
 {
 }
 
-- (id) initWithPathsAndListener:(NSArray*)paths listener:(id<FileSystemChangesListener>)listener;
+- (id) initWithListener:(id<FileSystemChangesListener>)listener;
+- (void) addPath:(NSString*)path;
 - (void) updatePath:(NSString *)path;
+
+- (NSArray*) paths;
 
 @end
