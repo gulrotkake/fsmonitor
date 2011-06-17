@@ -112,10 +112,12 @@
         File *a = [newFiles objectForKey: key];
         File *b = [oldFiles objectForKey: key];
 
-        if (!b) {
+        if (!b)
+        {
             [self.changesListener fileAdded: key];
         }
-        else if (![a.attributes isEqualToDictionary:b.attributes]) {
+        else if (![a.attributes isEqualToDictionary:b.attributes])
+        {
             [self.changesListener fileModified: key];
         }
         [oldFiles removeObjectForKey: key];

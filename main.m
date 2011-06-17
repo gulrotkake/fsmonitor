@@ -113,9 +113,11 @@ int main(int argc, char *const *argv)
     int longIndex;
     int res;
     int status = -1;
-    do {
+    do
+    {
         res = getopt_long_only(argc, argv, optString, longOpts, &longIndex);
-        switch(res) {
+        switch(res)
+        {
         case 'e':
             if (status == -1) status = 1;
             [execs addObject:[NSString stringWithUTF8String:optarg]];
@@ -135,11 +137,13 @@ int main(int argc, char *const *argv)
     NSMutableArray *paths = [NSMutableArray array];
     char *const *rav = argv + optind;
     int rac = argc-optind;
-    for (int i = 0; i<rac; ++i) {
+    for (int i = 0; i<rac; ++i)
+    {
         [paths addObject: [NSString stringWithUTF8String:rav[i]]];
     }
 
-    if (![paths count]) {
+    if (![paths count])
+    {
         [paths addObject:@"."];
     }
 
