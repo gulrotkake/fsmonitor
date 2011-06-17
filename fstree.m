@@ -36,11 +36,11 @@
 @interface FSTree ()
 @property (retain) NSMutableDictionary *pathTree;
 @property (retain) NSFileManager *fileManager;
+@property (assign) id<FileSystemChangesListener> changesListener;
 @end
 
 @implementation FSTree
-@synthesize pathTree, fileManager;
-
+@synthesize pathTree, fileManager, changesListener;
 - (NSString *) parsePath:(NSString *)path
 {
     if (!path || [path length] == 0) return nil;
@@ -81,11 +81,13 @@
     [pathTree setObject:files forKey:path];
 }
 
-- (id) initWithPaths:(NSArray*)paths
+
+- (id) initWithPathsAndListener:(NSArray*)paths listener:(id<FileSystemChangesListener>)listener
 {
     self = [super init];
     if (self)
     {
+        self.changesListener = listener;
         self.fileManager = [NSFileManager defaultManager];
         self.pathTree = [NSMutableDictionary dictionaryWithCapacity:[paths count]];
         for (NSString *path in paths)
@@ -110,20 +112,24 @@
         File *a = [newFiles objectForKey: key];
         File *b = [oldFiles objectForKey: key];
 
-        if (!b) printf("A %s\n", [key UTF8String]);
-        else if (![a.attributes isEqualToDictionary:b.attributes]) printf("M %s\n", [key UTF8String]);
-
+        if (!b) {
+            [self.changesListener fileAdded: key];
+        }
+        else if (![a.attributes isEqualToDictionary:b.attributes]) {
+            [self.changesListener fileModified: key];
+        }
         [oldFiles removeObjectForKey: key];
     }
 
     for (NSString *key in oldFiles)
     {
-        printf("D %s\n", [key UTF8String]);
+        [self.changesListener fileDeleted: key];
     }
 }
 
 - (void) dealloc
 {
+    self.changesListener = nil;
     self.fileManager = nil;
     self.pathTree = nil;
     [super dealloc];

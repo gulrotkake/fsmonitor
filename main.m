@@ -4,27 +4,70 @@
 
 #include <getopt.h>
 
+@interface ExecutionContext : NSObject<FileSystemChangesListener>
+{
+}
+
+@property (retain) FSTree *tree;
+@end
+
+@implementation ExecutionContext
+@synthesize tree;
+
+- (id) initWithPathsAndExecutables:(NSArray*)paths executables:(NSArray*)executables
+{
+    self = [super init];
+    if (self)
+    {
+        self.tree = [[[FSTree alloc] initWithPathsAndListener:paths listener:self] autorelease];
+    }
+    return self;
+}
+
+- (void) dealloc
+{
+    self.tree = nil;
+    [super dealloc];
+}
+
+- (void) fileModified:(NSString *)path
+{
+}
+
+- (void) fileAdded:(NSString *)path
+{
+}
+
+- (void) fileDeleted:(NSString *)path
+{
+}
+
+@end
+
 void iFSEventStreamCallback(
     ConstFSEventStreamRef streamRef,
     void *clientCallBackInfo,
     size_t numEvents,
     void *eventPaths,
     const FSEventStreamEventFlags eventFlags[],
-    const FSEventStreamEventId eventIds[]
-) {
+    const FSEventStreamEventId eventIds[])
+{
     const char *const *paths = (const char *const *)eventPaths;
-    FSTree *tree = (FSTree*)clientCallBackInfo;
-    for (unsigned i = 0; i<numEvents; ++i) {
+    ExecutionContext *ec = (ExecutionContext *)clientCallBackInfo;
+    FSTree *tree = ec.tree;
+    for (unsigned i = 0; i<numEvents; ++i)
+    {
         NSString *path = [NSString stringWithUTF8String:paths[i]];
-        [tree updatePath: path];
+        [tree updatePath:path];
     }
 }
 
-int run(NSArray *paths) {
-    FSTree *tree = [[[FSTree alloc] initWithPaths:paths] autorelease];
+int run(NSArray *paths, NSArray *executables)
+{
+    ExecutionContext *ec = [[[ExecutionContext alloc] initWithPathsAndExecutables:paths executables:executables] autorelease];
     FSEventStreamContext context = {
         0,
-        tree,
+        ec,
         (CFAllocatorRetainCallBack)CFRetain,
         (CFAllocatorReleaseCallBack)CFRelease,
         (CFAllocatorCopyDescriptionCallBack)CFCopyDescription
@@ -56,7 +99,8 @@ int run(NSArray *paths) {
     return EXIT_SUCCESS;
 }
 
-int main(int argc, char *const *argv) {
+int main(int argc, char *const *argv)
+{
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
     NSMutableArray *execs = [NSMutableArray array];
@@ -99,7 +143,7 @@ int main(int argc, char *const *argv) {
         [paths addObject:@"."];
     }
 
-    int ret = status? run(paths) : 1;
+    int ret = status? run(paths, execs) : 1;
 
     [pool drain];
     return ret;
