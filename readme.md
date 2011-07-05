@@ -1,9 +1,13 @@
-FSEvents
---------
+FSWatch
+-------
+
+FSWatch is an application to monitor changes in a directory structure
+and execute actions depending on the events captured. It's built upon
+the Mac OS X FSEvents API.
 
 Usage:
 
-    fsevents [dir1] [dir2] [...] --add --modify --exec /myscript
+    fswatch [dir1] [dir2] [...] --add --modify --exec /myscript
 
 Global options:
 
@@ -21,6 +25,6 @@ actions until an `--exec` is encountered, which will then bind that
 `--exec` to those actions and will reset the flag. This allows you to
 bind multiple or different actions to different scripts. For example:
 
-    fsevents . -a -m --exec ~/tests.sh -a -d --exec ~/updatedocs.sh
+    fswatch . -a -m --exec ~/tests.sh -a -d --exec ~/updatedocs.sh
 
 
