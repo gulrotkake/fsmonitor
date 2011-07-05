@@ -40,7 +40,7 @@
 @end
 
 @implementation FSTree
-@synthesize pathTree, fileManager, changesListener;
+@synthesize pathTree, fileManager, changesListener, scanRecursively;
 
 - (NSString *) parsePath:(NSString *)path
 {
@@ -55,6 +55,13 @@
     return [newPath stringByStandardizingPath];
 }
 
+- (void) updateFile:(NSString *)path files:(NSMutableDictionary *)files
+{
+    // Add and monitor.
+    File *file = [[[File alloc] initWithPath:path] autorelease];
+    [files setObject:file forKey:path];
+}
+
 - (void) scanPath:(NSString *)path recursive:(BOOL)recursive
 {
     NSError *error;
@@ -67,17 +74,13 @@
         isDir = NO;
         // Is this a directory
         [fileManager fileExistsAtPath:absoluteFilename isDirectory:&isDir];
+
         if (isDir && recursive)
         {
-            // Add and scan recursively.
             [self scanPath: absoluteFilename recursive:recursive];
         }
-        else
-        {
-            // Just add and monitor.
-            File *file = [[[File alloc] initWithPath:absoluteFilename] autorelease];
-            [files setObject:file forKey:absoluteFilename];
-        }
+
+        [self updateFile:absoluteFilename files:files];
     }
     [pathTree setObject:files forKey:path];
 }
@@ -91,6 +94,7 @@
         self.changesListener = listener;
         self.fileManager = [NSFileManager defaultManager];
         self.pathTree = [NSMutableDictionary dictionary];
+        self.scanRecursively = NO;
     }
     return self;
 }
@@ -98,7 +102,7 @@
 - (void) addPath:(NSString*)path
 {
     NSString *absolutePath = [self parsePath: path];
-    [self scanPath: absolutePath recursive:YES];
+    [self scanPath: absolutePath recursive:scanRecursively];
 }
 
 - (NSArray *) paths
@@ -106,11 +110,37 @@
     return [self.pathTree allKeys];
 }
 
+- (void) updateParent:(NSString *)path
+{
+    NSString *currentPath = path;
+    NSString *parent = [path stringByDeletingLastPathComponent];
+    while([parent length] > 1)
+    {
+        NSMutableDictionary *files = [pathTree objectForKey: parent];
+        if (files)
+        {
+            [self.changesListener fileModified:currentPath];
+            [self updateFile:currentPath files:files];
+        }
+        currentPath = parent;
+        parent = [parent stringByDeletingLastPathComponent];
+    }
+}
+
 - (void) updatePath:(NSString *)inPath
 {
     NSString *path = [inPath stringByStandardizingPath];
     NSMutableDictionary *oldFiles = [pathTree objectForKey: path];
-    [self scanPath: path recursive:NO];
+
+    // If we are not running recursively update the watched parent as modified.
+    // Avoid a needless rescan of the entire directory.
+    if (!scanRecursively && oldFiles == nil)
+    {
+        [self updateParent:path];
+        return;
+    }
+
+    [self scanPath:path recursive:NO];
     NSDictionary *newFiles = [pathTree objectForKey: path];
 
     // Compare two and output differences.

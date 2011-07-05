@@ -168,6 +168,7 @@ int main(int argc, char *const *argv)
         { "add", no_argument, NULL, 'a' },
         { "delete", no_argument, NULL, 'd' },
         { "modify", no_argument, NULL, 'm' },
+        { "recursive", no_argument, NULL, 'r' },
         { "exec", required_argument, NULL, 'e' },
         { NULL, 0, NULL, 0 }
     };
@@ -199,6 +200,9 @@ int main(int argc, char *const *argv)
                 good = NO;
             }
             flags = 0;
+            break;
+        case 'r':
+            ec.tree.scanRecursively = YES;
             break;
         case 'h':
         case '?':

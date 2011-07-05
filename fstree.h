@@ -10,6 +10,8 @@
 {
 }
 
+@property (assign) BOOL scanRecursively;
+
 - (id) initWithListener:(id<FileSystemChangesListener>)listener;
 - (void) addPath:(NSString*)path;
 - (void) updatePath:(NSString *)path;
