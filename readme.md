@@ -12,6 +12,7 @@ Usage:
 Global options:
 
     --recursive, -r : Scan directories recursively
+    --verbose, -v   : Be verbose about program state
 
 
 Per execution options:

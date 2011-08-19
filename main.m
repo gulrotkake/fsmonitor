@@ -164,16 +164,18 @@ int main(int argc, char *const *argv)
     ExecutionContext *ec = [[[ExecutionContext alloc] init] autorelease];
 
     NSUInteger flags = 0;
+    BOOL beVerbose = NO;
     static struct option longOpts[] = {
         { "add", no_argument, NULL, 'a' },
         { "delete", no_argument, NULL, 'd' },
         { "modify", no_argument, NULL, 'm' },
         { "recursive", no_argument, NULL, 'r' },
         { "exec", required_argument, NULL, 'e' },
+        { "verbose", no_argument, NULL, 'e' },
         { NULL, 0, NULL, 0 }
     };
 
-    const char *optString = "adme:h?";
+    const char *optString = "adme:vh?";
     BOOL good = YES;
 
     int res;
@@ -204,6 +206,9 @@ int main(int argc, char *const *argv)
         case 'r':
             ec.tree.scanRecursively = YES;
             break;
+        case 'v':
+            beVerbose = YES;
+            break;
         case 'h':
         case '?':
             good = NO;
@@ -219,15 +224,27 @@ int main(int argc, char *const *argv)
     char *const *rav = argv + optind;
     int rac = argc-optind;
 
+    const char* nonrecursively_adding_path_message = "Adding path: %s\n";
+    const char* recursively_adding_path_message = "Recursively adding path: %s\n";
+    const char* adding_path_message =
+        (ec.tree.scanRecursively == YES ?
+            recursively_adding_path_message :
+            nonrecursively_adding_path_message
+        );
+
     if (rac == 0)
     {
+        if (beVerbose == YES) printf(adding_path_message, ".");
         [ec addPath:@"."];
     }
 
     for (int i = 0; i<rac; ++i)
     {
+        if (beVerbose == YES) printf(adding_path_message, rav[i]);
         [ec addPath:[NSString stringWithUTF8String:rav[i]]];
     }
+
+    if (beVerbose == YES) printf("Finished adding paths. Listening for fs changes...\n");
 
     int ret = good? run(ec) : 1;
 
