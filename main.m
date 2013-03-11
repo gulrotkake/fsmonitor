@@ -13,6 +13,10 @@ typedef enum
 
 @interface ExecutionContext : NSObject<FileSystemChangesListener>
 {
+    FSTree *tree;
+    NSMutableArray *addScripts;
+    NSMutableArray *modScripts;
+    NSMutableArray *delScripts;
 }
 
 @property (retain) FSTree *tree;

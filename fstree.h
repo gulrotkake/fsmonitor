@@ -8,6 +8,10 @@
 
 @interface FSTree : NSObject
 {
+    NSMutableDictionary *pathTree;
+    NSFileManager *fileManager;
+    id<FileSystemChangesListener> changesListener;
+    BOOL scanRecursively;
 }
 
 @property (assign) BOOL scanRecursively;

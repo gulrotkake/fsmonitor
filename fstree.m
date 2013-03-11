@@ -2,7 +2,10 @@
 
 @interface File : NSObject
 {
+    NSString *fileName;
+    NSDictionary *attributes;
 }
+
 @property (copy) NSString *fileName;
 @property (retain) NSDictionary *attributes;
 
