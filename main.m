@@ -215,6 +215,14 @@ int main(int argc, char *const *argv)
             break;
         case 'h':
         case '?':
+            fprintf(stderr, "fswatch [dir1] [dir2] [...] --add --modify --exec /myscript\n");
+            fprintf(stderr, "Global Options:\n--recursive, -r : Scan directories recursively\n");
+            fprintf(stderr, "--verbose, -v   : Be verbose about program state\n\n");
+            fprintf(stderr, "Execution Options:\n");
+            fprintf(stderr, "--add, -a    : When a file or directory is added\n");
+            fprintf(stderr, "--modify, -m : When a file or directory is modified\n");
+            fprintf(stderr, "--delete, -d : When a file or directory is deleted\n\n");
+            fprintf(stderr, "Example:\nfswatch . -a -m --exec ~/tests.sh -a -d -m --exec ~/updatedocs.sh\n");
             good = NO;
             break;
         case 0: // long arg
