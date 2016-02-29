@@ -1,13 +1,15 @@
-FSWatch
+!! This project has been superseded by the far more developed and maintained [fswatch](https://github.com/emcrisostomo/fswatch.git).
+
+FSMonitor
 -------
 
-FSWatch is an application to monitor changes in a directory structure
+FSMonitor is an application to monitor changes in a directory structure
 and execute actions depending on the events captured. It's built upon
 the Mac OS X FSEvents API.
 
 Usage:
 
-    fswatch [dir1] [dir2] [...] --add --modify --exec /myscript
+    fsmonitor [dir1] [dir2] [...] --add --modify --exec /myscript
 
 Global options:
 
@@ -26,6 +28,6 @@ actions until an `--exec` is encountered, which will then bind that
 `--exec` to those actions and will reset the flag. This allows you to
 bind multiple or different actions to different scripts. For example:
 
-    fswatch . -a -m --exec ~/tests.sh -a -d --exec ~/updatedocs.sh
+    fsmonitor . -a -m --exec ~/tests.sh -a -d --exec ~/updatedocs.sh
 
 
