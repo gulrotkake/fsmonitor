@@ -1,5 +1,3 @@
-!! This project has been superseded by the far more developed and maintained [fswatch](https://github.com/emcrisostomo/fswatch.git).
-
 FSMonitor
 -------
 
