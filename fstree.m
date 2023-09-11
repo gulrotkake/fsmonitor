@@ -134,6 +134,7 @@
 {
     NSString *path = [inPath stringByStandardizingPath];
     NSMutableDictionary *oldFiles = [pathTree objectForKey: path];
+    [oldFiles retain];
 
     // If we are not running recursively update the watched parent as modified.
     // Avoid a needless rescan of the entire directory.
@@ -167,6 +168,7 @@
     {
         [self.changesListener fileDeleted: key];
     }
+    [oldFiles release];
 }
 
 - (void) dealloc
