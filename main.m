@@ -146,15 +146,12 @@ int run(ExecutionContext *ec)
         kFSEventStreamCreateFlagNoDefer
     );
 
-    FSEventStreamScheduleWithRunLoop(
-        ref,
-        CFRunLoopGetCurrent(),
-        kCFRunLoopDefaultMode
-    );
+    dispatch_queue_main_t queue = dispatch_get_main_queue();
+    FSEventStreamSetDispatchQueue(ref, queue);
 
     FSEventStreamStart(ref);
 
-    CFRunLoopRun();
+    dispatch_main();
 
     FSEventStreamStop(ref);
     FSEventStreamInvalidate(ref);
